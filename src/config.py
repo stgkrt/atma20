@@ -59,7 +59,7 @@ class BaseConfig:
 
     # Local development paths
     BASE_DIR = Path("/kaggle")
-    INPUT_DIR = BASE_DIR / "input"
+    INPUT_DIR = BASE_DIR / "input" / "atma20"
     TRAIN_CSV = INPUT_DIR / "train.csv"
     TEST_CSV = INPUT_DIR / "test.csv"
     SAMPLE_SUB_CSV = INPUT_DIR / "sample_submission.csv"

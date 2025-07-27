@@ -23,8 +23,84 @@ def plot_predictions(pred, oof_df):
     plt.show()
 
 
-def save_results(pred, oof_df, config, model_type):
-    """Save prediction results"""
+def setup_logging(config, model_type):
+    """Setup logging for training progress"""
+    import logging
+    from datetime import datetime
+
+    # Create output directory if it doesn't exist
+    Path(config.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
+
+    # Setup log file path
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_file = Path(config.OUTPUT_DIR) / f"training_{model_type}_{timestamp}.log"
+
+    # Clear any existing handlers to avoid conflicts
+    for handler in logging.root.handlers[:]:
+        logging.root.removeHandler(handler)
+
+    # Create logger
+    logger = logging.getLogger(f"{model_type}_training")
+    logger.setLevel(logging.INFO)
+
+    # Clear any existing handlers from this logger
+    logger.handlers.clear()
+
+    # Create formatters
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+
+    # Create file handler
+    file_handler = logging.FileHandler(log_file, mode="w")
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(formatter)
+
+    # Create console handler
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(formatter)
+
+    # Add handlers to logger
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+
+    # Prevent propagation to root logger to avoid duplicate messages
+    logger.propagate = False
+
+    logger.info(f"Starting {model_type} training...")
+    logger.info(f"Log file: {log_file}")
+
+    return logger
+
+
+def save_models(models, config, model_type):
+    """Save trained models to disk"""
+    import pickle
+
+    # Create models directory if it doesn't exist
+    models_dir = Path(config.OUTPUT_DIR) / "models"
+    models_dir.mkdir(exist_ok=True)
+
+    # Save each fold model
+    for fold, model in enumerate(models):
+        model_path = models_dir / f"{model_type}_fold_{fold}.pkl"
+        with open(model_path, "wb") as f:
+            pickle.dump(model, f)
+
+    # Save all models as a list
+    all_models_path = models_dir / f"{model_type}_all_models.pkl"
+    with open(all_models_path, "wb") as f:
+        pickle.dump(models, f)
+
+    print(f"Models saved to {models_dir}:")
+    for fold in range(len(models)):
+        print(f"  - {model_type}_fold_{fold}.pkl")
+    print(f"  - {model_type}_all_models.pkl")
+
+    return models_dir
+
+
+def save_results(pred, oof_df, config, model_type, models=None):
+    """Save prediction results and optionally models"""
     # Create output directory if it doesn't exist
     Path(config.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
@@ -44,6 +120,10 @@ def save_results(pred, oof_df, config, model_type):
     print(f"  - ens_{model_type}.csv")
     print("  - submission.csv")
     print(f"  - oof_{model_type}.csv")
+
+    # Save models if provided
+    if models is not None:
+        save_models(models, config, model_type)
 
     return sub
 

@@ -17,6 +17,7 @@ from src.model_utils import (
     make_prediction,
     print_training_info,
 )
+from src.optuna_utils import get_optimizer
 from src.split_fold import prepare_fold_data
 from src.timer_utils import Timer
 
@@ -112,20 +113,38 @@ def lgb_main():
     else:
         config = BaseConfig.from_args(args)
 
-    # Get model parameters
-    params = LGBParams.get_params(args)
-
     # Setup logging
     logger = setup_logging(config, "lgb")
-
-    # Print training info
-    print_training_info(config, params, "LightGBM")
-    logger.info(f"Training parameters: {params}")
 
     # Load and prepare data
     train_df, test_df = load_and_prepare_data(config)
     logger.info(f"Training data shape: {train_df.shape}")
     logger.info(f"Test data shape: {test_df.shape}")
+
+    # Check if using Optuna for hyperparameter optimization
+    if config.use_optuna:
+        print("Using Optuna for hyperparameter optimization...")
+        logger.info("Starting Optuna hyperparameter optimization...")
+
+        optimizer = get_optimizer(
+            "lgb", config, config.optuna_trials, config.random_state
+        )
+        best_params, best_score = optimizer.optimize(train_df, config.optuna_study_name)
+
+        print(f"Best Optuna score: {best_score:.6f}")
+        print(f"Best parameters: {best_params}")
+        logger.info(f"Optuna optimization completed. Best score: {best_score:.6f}")
+        logger.info(f"Best parameters: {best_params}")
+
+        # Use optimized parameters
+        params = best_params
+    else:
+        # Get default model parameters
+        params = LGBParams.get_params(args)
+
+    # Print training info
+    print_training_info(config, params, "LightGBM")
+    logger.info(f"Training parameters: {params}")
 
     # Train model
     print("Training LightGBM model...")

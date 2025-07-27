@@ -49,6 +49,19 @@ def get_base_parser():
         "--exp-category", type=str, default="baseline", help="Experiment category"
     )
 
+    # Optuna settings
+    parser.add_argument(
+        "--use-optuna",
+        action="store_true",
+        help="Use Optuna for hyperparameter optimization",
+    )
+    parser.add_argument(
+        "--optuna-trials", type=int, default=100, help="Number of Optuna trials"
+    )
+    parser.add_argument(
+        "--optuna-study-name", type=str, default=None, help="Optuna study name"
+    )
+
     return parser
 
 
@@ -103,6 +116,12 @@ class BaseConfig:
         config.early_stopping_rounds = args.early_stopping_rounds
         config.verbose_eval = args.verbose_eval
         config.FOLDS = list(range(args.n_folds))
+
+        # Optuna settings
+        config.use_optuna = args.use_optuna
+        config.optuna_trials = args.optuna_trials
+        config.optuna_study_name = args.optuna_study_name or f"{args.exp_name}_optuna"
+        config.random_state = args.random_state
 
         return config
 

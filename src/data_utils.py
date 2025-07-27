@@ -31,9 +31,10 @@ def setup_logging(config, model_type):
     # Create output directory if it doesn't exist
     Path(config.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
-    # Setup log file path
+    # Setup log file path - use experiment name if available
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file = Path(config.OUTPUT_DIR) / f"training_{model_type}_{timestamp}.log"
+    exp_name = getattr(config, "EXP_NAME", "experiment")
+    log_file = Path(config.OUTPUT_DIR) / f"{exp_name}_{model_type}_{timestamp}.log"
 
     # Clear any existing handlers to avoid conflicts
     for handler in logging.root.handlers[:]:
@@ -67,6 +68,8 @@ def setup_logging(config, model_type):
     logger.propagate = False
 
     logger.info(f"Starting {model_type} training...")
+    logger.info(f"Experiment: {exp_name}")
+    logger.info(f"Output directory: {config.OUTPUT_DIR}")
     logger.info(f"Log file: {log_file}")
 
     return logger

@@ -51,8 +51,8 @@ def fit_cat(df, config, params):
         logger.info(f"Fold {fold} - Train: {len(x_train)}, Valid: {len(x_valid)}")
 
         with Timer(prefix="fit fold={} ".format(fold)):
-            clf = CatBoostClassifier(**params)
-            clf.fit(x_train, y_train, verbose=500)
+            clf = CatBoostClassifier(train_dir=None, **params)
+            clf.fit(x_train, y_train, verbose=False)
 
         # cv 内で validation data とされた x_valid で予測をして oof_pred に保存していく
         # oof_pred は全部学習に使わなかったデータの予測結果になる → モデルの予測性能を見る指標として利用できる
@@ -69,6 +69,8 @@ def fit_cat(df, config, params):
 
     print("=" * 50)
     print(f"FINISH: Whole Score: {score:.4f}")
+    logger.info("=" * 50)
+    logger.info(f"FINISH: Whole Score: {score:.4f}")
     return oof_df, target, models, evals_results_list, feat_cols
 
 
@@ -142,6 +144,12 @@ def cat_main():
 
     # Evaluate and report
     evaluate_and_report(oof_df, config, "CatBoost")
+
+    # Log final evaluation metrics
+    final_score = competition_metrics(
+        oof_df[config.target_col], oof_df["oof_pred"].values
+    )
+    logger.info(f"Final evaluation - CatBoost CV score: {final_score:.6f}")
 
     # Plot feature importance
     print("Plotting feature importance...")

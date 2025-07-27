@@ -83,6 +83,8 @@ def fit_lgbm(df, config, params):
 
     print("=" * 50)
     print(f"FINISH: Whole Score: {score:.4f}")
+    logger.info("=" * 50)
+    logger.info(f"FINISH: Whole Score: {score:.4f}")
     return oof_df, target, models, evals_results_list, feat_cols
 
 
@@ -155,6 +157,12 @@ def lgb_main():
 
     # Evaluate and report
     evaluate_and_report(oof_df, config, "LightGBM")
+
+    # Log final evaluation metrics
+    final_score = competition_metrics(
+        oof_df[config.target_col], oof_df["oof_pred"].values
+    )
+    logger.info(f"Final evaluation - LightGBM CV score: {final_score:.6f}")
 
     # Plot feature importance
     print("Plotting feature importance...")

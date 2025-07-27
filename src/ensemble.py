@@ -72,7 +72,7 @@ def ensemble_submissions(
 
     # アンサンブル実行（重み付き平均）
     ensemble_df = submissions[0].copy()
-    target_col = ensemble_df.columns[0]  # 'target'カラム
+    target_col = ensemble_df.columns[-1]  # 最後の列が予測値（通常は'target'）
 
     # 重み付き平均を計算
     ensemble_values = np.zeros(len(ensemble_df))
